@@ -96,4 +96,35 @@ public class PromptingTechniquesController {
                 .content();
     }
 
+
+
+    @GetMapping("/chained-blog-post")
+    public String chainedBlogPost(@RequestParam String topic) {
+        String outline = chatClient.prompt()
+                .user("Create a short 3-point outline for a blog post about " + topic + ". "
+                        + "Respond with just the 3 points, one per line, no extra commentary.")
+                .call()
+                .content();
+
+        String blogPost = chatClient.prompt()
+                .user(u -> u.text("""
+                    Expand the following outline into a short blog post, with roughly one
+                    paragraph per point.
+
+                    Outline:
+                    {outline}
+                    """)
+                        .param("outline", outline))
+                .call()
+                .content();
+
+        return """
+            --- Step 1 output: outline ---
+            %s
+
+            --- Step 2 output: expanded blog post (built from step 1's output) ---
+            %s
+            """.formatted(outline, blogPost);
+    }
+
 }
