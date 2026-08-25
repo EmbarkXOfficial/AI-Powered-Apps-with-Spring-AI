@@ -58,6 +58,30 @@ public class TechAdvisorController {
                 .content() + "<pre>";
     }
 
+    @GetMapping("/inline-prompt-templates")
+    public String inlinePromptTemplates(@RequestParam String language,
+                                  @RequestParam String task){
+//        PromptTemplate promptTemplate = new PromptTemplate("""
+//                Write a short {language} code snippet that demonstrates how to {task}.
+//                Include comments explaining each step.
+//                """);
+//
+//        Prompt prompt = promptTemplate.create(Map.of(
+//                "language",language,
+//                "task", task
+//        ));
+
+        return "<pre>" + chatClient.prompt()
+                .user(u -> u.text("""
+                Write a short {language} code snippet that demonstrates how to {task}.
+                Include comments explaining each step.
+                """)
+                        .param("language",language)
+                        .param("task", task))
+                .call()
+                .content() + "<pre>";
+    }
+
     @GetMapping("/default-system-prompt")
     public String defaultSystemPrompt(@RequestParam String question) {
         return chatClientWithDefaultPersona.prompt()
