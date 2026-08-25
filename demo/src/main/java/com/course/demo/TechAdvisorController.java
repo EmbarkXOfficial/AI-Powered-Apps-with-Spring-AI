@@ -17,9 +17,15 @@ import java.util.List;
 @RequestMapping("/advisor")
 public class TechAdvisorController {
     private final ChatClient chatClient;
+    private final ChatClient chatClientWithDefaultPersona;
 
     public TechAdvisorController(ChatClient.Builder builder) {
         this.chatClient = builder.build();
+
+        this.chatClientWithDefaultPersona = builder
+                .defaultSystem("You are a strict technical interviewer conducting a Java backend interview. "
+                        + "Ask probing follow-up questions in your response.")
+                .build();
     }
 
     @GetMapping
@@ -30,13 +36,33 @@ public class TechAdvisorController {
                 .content(); // READING THE RESPONSE
     }
 
-//    SystemMessage
-//    UserMessage
-//    AssistantMessage
-    // Message
+    @GetMapping("/default-system-prompt")
+    public String defaultSystemPrompt(@RequestParam String question) {
+        return chatClientWithDefaultPersona.prompt()
+                .user(question) // BUILD THE REQUEST
+                .call() // SEND TO MODEL
+                .content(); // READING THE RESPONSE
+    }
 
-    // Building conversation history
-    // To set an example with AI model
+    @GetMapping("/system-prompt")
+    public String systemPrompts(@RequestParam String persona,
+                                @RequestParam String question) {
+
+        String systemText = switch (persona.toLowerCase()) {
+            case "pirate" -> "You are a pirate. Respond to everything in pirate speak, full of 'arrr' and nautical metaphors.";
+            case "shakespeare" -> "You are William Shakespeare. Respond in early modern English.";
+            case "interviewer" -> "You are a strict technical interviewer conducting a Java backend interview. "
+                    + "Ask probing follow-up questions in your response.";
+            default -> "You are a helpful assistant.";
+        };
+
+        return chatClient.prompt()
+                .system(systemText)
+                .user(question) // BUILD THE REQUEST
+                .call() // SEND TO MODEL
+                .content(); // READING THE RESPONSE
+    }
+
     @GetMapping("/conversation-history")
     public String conversationHistory(@RequestParam String followUpQuestion) {
         Message systemMessage = new SystemMessage("You are a helpful Java Tutor");
