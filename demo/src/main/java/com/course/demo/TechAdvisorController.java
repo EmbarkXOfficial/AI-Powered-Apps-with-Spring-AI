@@ -6,18 +6,22 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/advisor")
 public class TechAdvisorController {
     private final ChatClient chatClient;
     private final ChatClient chatClientWithDefaultPersona;
+
+//    Dear [Name], your appointment on [Date] at [Time] has been confirmed.
 
     public TechAdvisorController(ChatClient.Builder builder) {
         this.chatClient = builder.build();
@@ -34,6 +38,24 @@ public class TechAdvisorController {
                 .user("Explain Spring Boot in simple terms.") // BUILD THE REQUEST
                 .call() // SEND TO MODEL
                 .content(); // READING THE RESPONSE
+    }
+
+    @GetMapping("/prompt-variables")
+    public String promptVariables(@RequestParam String language,
+                                  @RequestParam String task){
+        PromptTemplate promptTemplate = new PromptTemplate("""
+                Write a short {language} code snippet that demonstrates how to {task}.
+                Include comments explaining each step.
+                """);
+
+        Prompt prompt = promptTemplate.create(Map.of(
+                "language",language,
+                "task", task
+        ));
+
+        return "<pre>" + chatClient.prompt(prompt)
+                .call()
+                .content() + "<pre>";
     }
 
     @GetMapping("/default-system-prompt")
