@@ -7,6 +7,8 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,12 +23,14 @@ public class TechAdvisorController {
     private final ChatClient chatClient;
     private final ChatClient chatClientWithDefaultPersona;
 
+    @Value("classpath:/prompts/recipe-prompt.st")
+    private Resource recipePrompt;
 //    Dear [Name], your appointment on [Date] at [Time] has been confirmed.
 
     public TechAdvisorController(ChatClient.Builder builder) {
         this.chatClient = builder.build();
 
-        this.chatClientWithDefaultPersona = builder
+        this.chatClientWithDefaultPersona = builder.clone()
                 .defaultSystem("You are a strict technical interviewer conducting a Java backend interview. "
                         + "Ask probing follow-up questions in your response.")
                 .build();
@@ -78,6 +82,18 @@ public class TechAdvisorController {
                 """)
                         .param("language",language)
                         .param("task", task))
+                .call()
+                .content() + "<pre>";
+    }
+
+    @GetMapping("/external-prompt-file")
+    public String externalPromptFile(@RequestParam String ingredient){
+        PromptTemplate promptTemplate = new PromptTemplate(recipePrompt);
+        Prompt prompt = promptTemplate.create(
+                Map.of("ingredient",ingredient)
+        );
+
+        return "<pre>" + chatClient.prompt(prompt)
                 .call()
                 .content() + "<pre>";
     }
