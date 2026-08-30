@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spring AI Streaming Chat Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+            max-width: 640px;
+            margin: 40px auto;
+            padding: 0 16px;
+            color: #1a1a1a;
+        }
+        h1 {
+            font-size: 20px;
+        }
+        p.hint {
+            color: #666;
+            font-size: 14px;
+        }
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        input {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        button {
+            padding: 10px 18px;
+            font-size: 15px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #93b4f5;
+            cursor: default;
+        }
+        #output {
+            min-height: 160px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 16px;
+            background: #fafafa;
+        }
+        #output:empty::before {
+            content: "The AI's streamed response will appear here, word by word...";
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Spring AI Streaming Chat Demo</h1>
+<p class="hint">
+    Type a topic and hit Send. This page calls <code>/api/streaming/sse-stream</code> and prints
+    each chunk as it arrives — no page reload, no waiting for the full answer first.
+</p>
+
+<div class="row">
+    <input id="topicInput" type="text" placeholder="e.g. Java streams" value="Java streams">
+    <button id="sendButton">Send</button>
+</div>
+
+<div id="output"></div>
+
+<script>
+    const sendButton = document.getElementById('sendButton');
+    const topicInput = document.getElementById('topicInput');
+    const output = document.getElementById('output');
+
+    // Swap this to point at your own streaming endpoint once you build one.
+    const STREAMING_ENDPOINT = 'http://localhost:8080/api/streaming/sse-stream';
+
+    function sendMessage() {
+        const topic = topicInput.value.trim();
+        if (!topic) {
+            return;
+        }
+
+        output.textContent = '';
+        sendButton.disabled = true;
+        sendButton.textContent = 'Streaming...';
+
+        const url = STREAMING_ENDPOINT + '?topic=' + encodeURIComponent(topic);
+        const eventSource = new EventSource(url);
+
+        eventSource.onmessage = (event) => {
+            output.textContent += event.data;
+        };
+
+        eventSource.onerror = () => {
+            eventSource.close();
+            sendButton.disabled = false;
+            sendButton.textContent = 'Send';
+        };
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    topicInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+
+</body>
+</html>
