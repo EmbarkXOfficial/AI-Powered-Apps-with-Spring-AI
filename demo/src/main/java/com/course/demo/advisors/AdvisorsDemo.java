@@ -1,11 +1,14 @@
 package com.course.demo.advisors;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/advisors")
@@ -31,6 +34,21 @@ public class AdvisorsDemo {
                 .user("Tell me a fun fact about this in 2 lines : " + topic)
 //                .advisors(new SimpleLoggerAdvisor())
                 .advisors(advisor)
+                .call()
+                .content();
+    }
+
+    @GetMapping(value = "/safeguard")
+    public String safeguardAdvisor(@RequestParam String topic) {
+        SafeGuardAdvisor safeGuardAdvisor = SafeGuardAdvisor.builder()
+                .sensitiveWords(List.of("password", "credit card"))
+                .failureResponse("I'm sorry, can't help you with that")
+                .build();
+
+        return chatClient.prompt()
+                .user("Tell me a fun fact about this in 2 lines : " + topic)
+//                .advisors(new SimpleLoggerAdvisor())
+                .advisors(safeGuardAdvisor)
                 .call()
                 .content();
     }
