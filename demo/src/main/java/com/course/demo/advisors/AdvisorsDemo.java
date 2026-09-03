@@ -53,4 +53,18 @@ public class AdvisorsDemo {
                 .content();
     }
 
+//    1. persona    2. question
+//    http://localhost:8080/api/advisors/persona?persona=senior%20engineer&question=what%20is%20java?
+    // Custom advisor --> mutate the request
+
+    @GetMapping(value = "/persona")
+    public String persona(@RequestParam String persona,
+                          @RequestParam String question) {
+        return chatClient.prompt()
+                .user(question)
+//                .advisors(new SimpleLoggerAdvisor())
+                .advisors(new PersonaAdvisor(persona, 0))
+                .call()
+                .content();
+    }
 }
