@@ -104,4 +104,16 @@ public class AdvisorsDemo {
                 .call()
                 .content();
     }
+
+    @GetMapping(value = "/stream")
+    public Flux<String> stream(@RequestParam String persona,
+                               @RequestParam String question) {
+        return chatClient.prompt()
+                .user(question)
+                .advisors(
+                        new TimingAdvisor(0),
+                        new PersonaAdvisor(persona, 1))
+                .stream()
+                .content();
+    }
 }
