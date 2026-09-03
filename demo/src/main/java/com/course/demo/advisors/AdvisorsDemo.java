@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -74,6 +75,17 @@ public class AdvisorsDemo {
                 .user(question)
                 .advisors(new DisclaimerAdvisor(0))
                 .call()
+                .content();
+    }
+
+    @GetMapping(value = "/timing")
+//    public String timing(@RequestParam String question) {
+    public Flux<String> timing(@RequestParam String question) {
+        return chatClient.prompt()
+                .user(question)
+                .advisors(new TimingAdvisor(0))
+//                .call()
+                .stream()
                 .content();
     }
 }
