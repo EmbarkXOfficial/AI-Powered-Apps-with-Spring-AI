@@ -88,4 +88,20 @@ public class AdvisorsDemo {
                 .stream()
                 .content();
     }
+
+
+    @GetMapping(value = "/chained")
+    public String chained(@RequestParam String persona,
+                          @RequestParam String question) {
+        return chatClient.prompt()
+                .user(question)
+//                .advisors(new SimpleLoggerAdvisor())
+                .advisors(
+                        new TimingAdvisor(0),
+                        new PersonaAdvisor(persona, 1),
+                        new SimpleLoggerAdvisor(-1),
+                        new DisclaimerAdvisor(5))
+                .call()
+                .content();
+    }
 }
