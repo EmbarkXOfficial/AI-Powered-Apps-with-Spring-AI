@@ -67,4 +67,13 @@ public class AdvisorsDemo {
                 .call()
                 .content();
     }
+
+    @GetMapping(value = "/disclaimer")
+    public String disclaimer(@RequestParam String question) {
+        return chatClient.prompt()
+                .user(question)
+                .advisors(new DisclaimerAdvisor(0))
+                .call()
+                .content();
+    }
 }
