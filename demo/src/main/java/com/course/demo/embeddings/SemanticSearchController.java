@@ -22,7 +22,7 @@ public class SemanticSearchController {
         this.embeddingModel = embeddingModel;
     }
 
-    @PostConstruct
+    /*@PostConstruct
     void seed(){
         vectorStore.add(List.of(
                 new Document("Spring AI provides a unified Java API for interacting with AI language models"),
@@ -38,7 +38,31 @@ public class SemanticSearchController {
                 new Document("SimpleVectorStore is an in-memory vector store backed by a ConcurrentHashMap"),
                 new Document("Cosine similarity measures the angle between two vectors: 1.0 means identical, 0.0 means unrelated")
         ));
+    }*/
+
+
+    @PostConstruct
+    void seed() {
+        vectorStore.add(List.of(
+                new Document("Spring AI provides a unified Java API for AI models",
+                        Map.of("category", "framework")),
+                new Document("ChatClient is the main interface for sending prompts to AI",
+                        Map.of("category", "framework")),
+                new Document("VectorStore stores document embeddings for semantic search",
+                        Map.of("category", "framework")),
+                new Document("Your invoice is generated on the 1st of every month",
+                        Map.of("category", "billing")),
+                new Document("You can cancel your subscription from account settings",
+                        Map.of("category", "billing")),
+                new Document("Refunds are processed within 5-7 business days",
+                        Map.of("category", "billing")),
+                new Document("To reset your password click forgot password on login",
+                        Map.of("category", "account")),
+                new Document("Two factor authentication can be enabled in security settings",
+                        Map.of("category", "account"))
+        ));
     }
+
 
     @PostMapping("/documents")
     public Map<String, Integer> addDocuments(@RequestBody List<String> texts) {
@@ -52,6 +76,28 @@ public class SemanticSearchController {
                                        @RequestParam(defaultValue = "4") int topK) {
         return vectorStore.similaritySearch(
                     SearchRequest.builder().query(query).topK(topK).build()
+                ).stream()
+                .map(
+                        doc
+                                -> new DocumentResult(doc.getId(),
+                                doc.getText(),
+                                doc.getScore()))
+                .toList();
+    }
+
+    @GetMapping("/search/metadata")
+    public List<DocumentResult> searchMetadata(@RequestParam String query,
+                                       @RequestParam(defaultValue = "4") int topK,
+                                               @RequestParam(required = false) String category) {
+        SearchRequest.Builder builder = SearchRequest.builder()
+                .query(query)
+                .topK(topK);
+
+        if (category != null)
+            builder.filterExpression("category == '" + category + "'");
+
+        return vectorStore.similaritySearch(
+                        builder.build()
                 ).stream()
                 .map(
                         doc
