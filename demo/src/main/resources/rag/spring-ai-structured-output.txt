@@ -1,0 +1,29 @@
+SOURCE: spring-ai-structured-output
+TITLE: Structured Output in Spring AI
+
+Structured output allows mapping AI responses directly into Java records, eliminating manual JSON parsing. Spring AI instructs the model to produce JSON conforming to the record's schema, then deserializes it automatically.
+
+For a single object: .entity(MyRecord.class)
+For a list:         .entity(new ParameterizedTypeReference<List<MyRecord>>() {})
+
+Example:
+  record Quiz(String topic, List<Question> questions) {}
+  record Question(String text, List<String> options, String answer) {}
+
+  Quiz quiz = chatClient.prompt()
+      .user("Create a 3-question quiz about " + topic)
+      .call()
+      .entity(Quiz.class);
+
+Spring AI automatically adds format instructions to the prompt telling the model to produce JSON, and uses Jackson to deserialize the response.
+
+Best practices for structured output:
+- Keep records flat where possible; deeply nested structures can confuse the model
+- Include field names that are self-explanatory (the model uses them to populate values)
+- Add a brief @JsonProperty description or comment in the prompt if the field is ambiguous
+- For optional fields, use nullable types or Optional<>
+- Always validate the returned record in production code; model output is not guaranteed
+
+Records used for structured output can include: String, int/Integer, boolean/Boolean, List<T>, Map<String,T>, and other records as nested types.
+
+The entity() method works with both .call() (blocking) and in theory with .stream() if you aggregate the full response first.

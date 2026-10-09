@@ -1,0 +1,19 @@
+SOURCE: spring-ai-overview
+TITLE: What is Spring AI?
+
+Spring AI is a Java framework that provides a unified, Spring-idiomatic API for building AI-powered applications. It abstracts away provider-specific details so developers can switch between AI providers (OpenAI, Google Gemini, Ollama, Anthropic, etc.) with minimal code changes.
+
+The core abstraction is the ChatClient, which is built via ChatClient.Builder and allows you to send prompts and receive responses. Spring AI follows the familiar Spring patterns: auto-configuration, dependency injection, and @Bean factories.
+
+Key capabilities of Spring AI:
+- Chat: send prompts, receive responses, stream tokens via Flux
+- Structured Output: map AI responses directly into Java records
+- Advisors: intercept and modify requests and responses in a pipeline
+- Memory: persist conversation history across turns
+- Embeddings: convert text to float[] vectors for semantic search
+- Vector Stores: store and retrieve document embeddings
+- RAG (Retrieval Augmented Generation): combine search with generation
+
+Spring AI 2.0 requires Spring Boot 4 and Java 21. The BOM artifact is spring-ai-bom, and model starters follow the naming pattern spring-ai-starter-model-{provider} (for example spring-ai-starter-model-ollama).
+
+To get started, add the BOM to your pom.xml dependencyManagement section, add the provider starter as a dependency, and inject ChatClient.Builder into your controller constructor. Call chatClientBuilder.build() once to create the ChatClient instance.

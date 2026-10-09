@@ -1,0 +1,28 @@
+SOURCE: spring-ai-embeddings-rag
+TITLE: Embeddings, Vector Stores, and RAG
+
+Embeddings are numerical representations of text as float arrays (float[]). Semantically similar texts produce vectors that are close together in the high-dimensional embedding space. Distance is measured with cosine similarity: a score of 1.0 means identical meaning, 0.0 means unrelated.
+
+EmbeddingModel is the Spring AI interface for generating embeddings. With Ollama, add spring.ai.ollama.embedding.options.model=nomic-embed-text to application.properties (requires ollama pull nomic-embed-text). The embed(String text) method returns float[].
+
+VectorStore stores document embeddings and supports similarity search. Key implementations:
+- SimpleVectorStore: in-memory, backed by ConcurrentHashMap; good for demos and testing
+- PgVector: PostgreSQL with the pgvector extension; suitable for production
+- Others: Redis, Chroma, Pinecone, Milvus, OpenSearch, etc.
+
+Create a SimpleVectorStore with: SimpleVectorStore.builder(embeddingModel).build()
+
+The Document class represents a piece of content with: text content, a unique id (auto-generated UUID), metadata map (Map<String,Object>), and an optional similarity score (populated after search).
+
+To add documents: vectorStore.add(List.of(new Document(text, metadata)))
+To search: vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(5).build())
+
+RAG (Retrieval Augmented Generation) is a pattern that grounds the model's response in real retrieved documents:
+1. User submits a question
+2. The question is embedded into a vector
+3. The vector store returns the K most similar documents
+4. The retrieved documents are injected into the prompt as context
+5. The model generates an answer based only on the provided context
+6. The source documents are returned alongside the answer as citations
+
+RAG prevents hallucination by restricting the model to information that actually exists in your knowledge base. Citations let users verify the answer against the original source.

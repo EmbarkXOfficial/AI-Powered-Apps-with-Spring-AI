@@ -1,0 +1,30 @@
+SOURCE: spring-ai-memory
+TITLE: Conversation Memory in Spring AI
+
+ChatMemory is the interface for storing and retrieving conversation history. It enables multi-turn conversations where the model remembers earlier messages. The key constant ChatMemory.CONVERSATION_ID is the context parameter key used to pass the conversation identifier to memory advisors.
+
+MessageWindowChatMemory is the standard implementation. It keeps a sliding window of the most recent N messages (maxMessages). Older messages are dropped automatically when the limit is exceeded. It wraps a ChatMemoryRepository for the actual storage.
+
+ChatMemoryRepository handles persistence:
+- InMemoryChatMemoryRepository: stores history in a ConcurrentHashMap; data is lost on restart
+- JdbcChatMemoryRepository: stores history in a relational database (H2, PostgreSQL, etc.); survives restarts
+
+To use JDBC memory, add the spring-ai-starter-model-chat-memory-repository-jdbc dependency. Spring AI auto-configures a JdbcChatMemoryRepository bean using the application datasource. Set spring.ai.chat.memory.repository.jdbc.initialize-schema=always to auto-create the SPRING_AI_CHAT_MEMORY table.
+
+Usage with MessageChatMemoryAdvisor:
+  chatClient.prompt()
+      .user(message)
+      .advisors(a -> a
+          .advisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+          .param(ChatMemory.CONVERSATION_ID, conversationId))
+      .call()
+      .content();
+
+The conversationId must be passed as a context parameter at call time. This allows a single ChatClient to serve multiple independent conversations simultaneously.
+
+Memory scoping patterns:
+- Per-user: conversationId = userId
+- Per-session: conversationId = userId + ":" + sessionId
+- Per-topic: conversationId = userId + ":" + topic
+
+The ChatMemoryRepository interface exposes findConversationIds(), findByConversationId(String), and deleteByConversationId(String) for managing stored history programmatically.

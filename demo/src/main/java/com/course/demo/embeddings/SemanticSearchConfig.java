@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class SemanticSearchConfig {
-    @Bean
-    @Primary
+//    @Bean
+//    @Primary
     VectorStore semanticSearchVectorStore(EmbeddingModel embeddingModel){
         return SimpleVectorStore.builder(embeddingModel).build();
     }

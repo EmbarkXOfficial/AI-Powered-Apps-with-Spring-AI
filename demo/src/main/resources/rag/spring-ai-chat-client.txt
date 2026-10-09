@@ -1,0 +1,24 @@
+SOURCE: spring-ai-chat-client
+TITLE: ChatClient and Prompting
+
+ChatClient is the central API in Spring AI for interacting with language models. It is created by calling ChatClient.Builder.build() and is typically stored as a field in a @RestController.
+
+Basic usage pattern:
+  String response = chatClient.prompt()
+      .system("You are a helpful assistant")
+      .user("What is Spring AI?")
+      .call()
+      .content();
+
+For streaming responses, replace .call().content() with .stream().content() which returns Flux<String>. This allows tokens to be delivered to the browser incrementally via Server-Sent Events (text/event-stream).
+
+PromptTemplate allows parameterized prompts with named variables using StringTemplate syntax:
+  new PromptTemplate("Tell me about {topic}").create(Map.of("topic", "Java"))
+
+Templates can also be loaded from .st files on the classpath using @Value("classpath:/prompts/my-template.st").
+
+For structured output, use .entity(MyRecord.class) instead of .content() to map the AI response directly into a Java record. For lists, use .entity(new ParameterizedTypeReference<List<MyRecord>>() {}).
+
+System prompts set the persona or instructions for the model. User messages carry the actual question. Few-shot examples (showing the model examples of input-output pairs) can be embedded in the system prompt to guide response format.
+
+The ChatOptions interface allows configuring model-specific parameters like temperature (creativity), maxTokens, and topP. These can be set globally in application.properties or per-request via .options(ChatOptions).

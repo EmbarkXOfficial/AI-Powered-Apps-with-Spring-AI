@@ -1,0 +1,24 @@
+SOURCE: spring-ai-advisors
+TITLE: Advisors in Spring AI
+
+Advisors form a pipeline that intercepts and transforms ChatClient requests and responses. They work like Servlet filters or Spring AOP advice but specifically for AI calls.
+
+The three advisor interfaces are:
+- CallAdvisor: intercepts blocking calls; implement adviseCall(ChatClientRequest, CallAdvisorChain)
+- StreamAdvisor: intercepts streaming calls; implement adviseStream(ChatClientRequest, StreamAdvisorChain)
+- BaseAdvisor: abstract class implementing both; override before() and after()
+
+The before() method receives the ChatClientRequest and can modify the prompt or context before the model call. The after() method receives the ChatClientResponse and can modify the response before it is returned to the caller.
+
+Advisors are ordered using getOrder(): lower numbers run first in before() and last in after(). The DEFAULT_CHAT_MEMORY_PRECEDENCE_ORDER constant (Integer.MIN_VALUE + 1000) is used for memory advisors so they run early.
+
+Built-in advisors provided by Spring AI:
+- SimpleLoggerAdvisor: logs full request and response at DEBUG level via SLF4J
+- MessageChatMemoryAdvisor: loads and saves conversation history using a ChatMemory
+- SafeGuardAdvisor: blocks prompts containing configured sensitive words
+
+Custom advisors are registered per-call using .advisors(myAdvisor) on the ChatClient prompt builder. The AdvisorSpec also supports .param(key, value) for passing runtime parameters (such as the conversationId for memory advisors).
+
+To chain advisors: .advisors(new TimingAdvisor(0), new PersonaAdvisor(persona, 1), new SimpleLoggerAdvisor())
+
+The QuestionAnswerAdvisor (from spring-ai-advisors-vector-store) implements RAG: it searches a VectorStore for documents relevant to the user query and injects them into the system prompt automatically.
